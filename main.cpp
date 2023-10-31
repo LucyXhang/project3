@@ -1,7 +1,8 @@
 #include <iostream>
+#include <iomanip>
 #include <string>
 #include <list>
-#include <vector>
+#include <cmath>
 
 using namespace std;
 
@@ -12,8 +13,11 @@ class State
         State(string, double, long long int);
         
         double findPercentage();
-        string getName() const;
-        double getPercentage() const;
+        string getName();
+        double getEnergy();
+        long long int getSize();
+        double getPercentage();
+        void setPercentage(double);
         
     private:
         string m_name;
@@ -34,104 +38,135 @@ State::State(string name, double energy, long long int size)
     m_name = name;
     m_energy = energy * 1000000000000;
     m_size = size;
-    m_percentage = findPercentage();
 }
 
-double State::findPercentage()
-{
-    double panelsNeeded = ceil ((m_energy * 51.0));
-    double panelArea = panelsNeeded * 18.0;
-    m_percentage = ceil((panelArea / m_size) * 100.0);
-    return m_percentage;
-}
-
-string State::getName() const
+string State::getName()
 {
     return m_name;
 }
 
-double State::getPercentage() const
+double State::getEnergy()
+{
+    return m_energy;
+}
+
+long long int State::getSize()
+{
+    return m_size;
+}
+
+double State::getPercentage()
 {
     return m_percentage;
 }
 
-bool compareStates(const State& a, const State& b)
+void State::setPercentage(double percentage)
 {
-    return a.getPercentage() < b.getPercentage();
+    m_percentage = percentage;
 }
 
-void customSort(list<State>& states)
+double State::findPercentage()
 {
-    for(auto it1 = states.begin(); it1 != states.end(); ++it1)
+    // calculate panel out per year in BTUs
+    // assume an 18 square foot panel produces 600 kwh per year
+    double panelBTU = 600 * 3412;
+    
+    // calculate the panels need to produce required electricity
+    double panelsNeeded = m_energy * 365 / panelBTU;
+    
+    // deterine percentage of states' land mass needed
+    // assume 18 squaer foot panels
+    double percentage = (panelsNeeded / (m_size / 18)) * 100;
+    m_percentage = percentage;
+    return percentage;
+}
+
+void printPercentage (list <State> a)
+{
+    cout << endl << "State \t\t" << "Percentage of land used" << endl << endl;
+    for (auto it = a.begin(); it != a.end(); it++)
     {
-        for (auto it2 = it1; it2 != states.end(); ++it2)
+        cout << std::left << std::setw(18) << (*it).getName() << "\t" << (*it).getPercentage() << endl << endl;
+    }
+}
+
+void add (list<State> &a, State &b)
+{
+    list<State>::iterator it;
+    list<State>::iterator previous;
+    
+    if (a.empty() || ((a.front()).getPercentage() > b.getPercentage()))
+    {
+        // add to start on list
+        a.push_front(b);
+    }
+    else
+    {
+        // find the correct location
+        previous = a.begin();
+        for (auto it = a.begin(); it != a.end(); ++it)
         {
-            if(it1 -> getPercentage() > it2 -> getPercentage())
+            if ((*it).getPercentage() > b.getPercentage())
             {
-                swap(*it1, *it2);
+                break;
+            }
+            else
+            {
+                previous = it;
             }
         }
+        // add to correct position
+        a.insert(++previous,b);
     }
 }
 
 int main()
 {
     list<State> states;
-    
-    cout << "Ordered Listing of States Based on Percentage of Land Needed for Solar Panels" << endl;
-    cout << endl;
+    double percentage;
     
     State tx("Texas", 13480.8, 7487580672000);
-    tx.findPercentage();
-    cout << tx.getName() << " would use " << tx.getPercentage() << "% of its area" << endl;
-    states.push_back(tx);
+    percentage = tx.findPercentage();
+    add(states, tx);
     
-    State cl("California", 6922.8, 4563554688000);
-    cl.findPercentage();
-    cout << cl.getName() << " would use " << cl.getPercentage() << "% of its area" << endl;
-    states.push_back(cl);
+    State ca("California", 6922.8, 4563554688000);
+    ca.findPercentage();
+    add(states, ca);
     
     State la("Louisiana", 4200.4, 1445216256000);
     la.findPercentage();
-    cout << la.getName() << " would use " << la.getPercentage() << "% of its area" << endl;
-    states.push_back(la);
+    add(states, la);
     
     State fd("Florida", 4003.1, 1806265792000);
     fd.findPercentage();
-    cout << fd.getName() << " would use " << fd.getPercentage() << "% of its area" << endl;
-    states.push_back(fd);
+    add(states, fd);
     
     State il("Illinois", 3612.9, 1614549657600);
     il.findPercentage();
-    cout << il.getName() << " would use " << il.getPercentage() << "% of its area" << endl;
-    states.push_back(il);
+    add(states, il);
     
     State pl("Pennsylvania", 3413.0, 1283967590400);
     pl.findPercentage();
-    cout << pl.getName() << " would use " << pl.getPercentage() << "% of its area" << endl;
-    states.push_back(pl);
+    add(states, pl);
     
     State oi("Ohio", 3404.5, 1249649280000);
     oi.findPercentage();
-    cout << oi.getName() << " would use " << oi.getPercentage() << "% of its area" << endl;
-    states.push_back(oi);
+    add(states,oi);
     
     State ny("New York", 3354.2, 1520933990400);
     ny.findPercentage();
-    cout << ny.getName() << " would use " << ny.getPercentage() << "% of its area" << endl;
-    states.push_back(ny);
+    add(states,ny);
     
     State ga("Georgia", 2727.6, 1656673920000);
     ga.findPercentage();
-    cout << ga.getName() << " would use " << ga.getPercentage() << "% of its area" << endl;
-    states.push_back(ga);
+    add(states,ga);
     
     State mg("Michigan", 2610.6, 2696287334400);
     mg.findPercentage();
-    cout << mg.getName() << " would use " << mg.getPercentage() << "% of its area" << endl;
-    states.push_back(mg);
+    add(states,mg);
     
-    customSort(states);
+    cout << endl;
+    printPercentage (states);
     
     return 0;
 }
